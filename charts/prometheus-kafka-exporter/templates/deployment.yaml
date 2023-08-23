@@ -114,6 +114,10 @@ spec:
 {{- end }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
+          {{- with .Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- if or (.Values.tls.mountPath) (.Values.sasl.kerberos.mountPath) }}
           volumeMounts:
             {{- if .Values.tls.mountPath }}
@@ -161,4 +165,8 @@ spec:
           secret:
             secretName: {{ .Values.server.tls.secretName }}
         {{- end }}
+      {{- end }}
+      {{- if or .Values.imagePullSecrets .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+      {{- include "prometheus-kafka-exporter.imagePullSecrets" (dict "Values" .Values "imagePullSecrets" .Values.imagePullSecrets) | indent 8 }}
       {{- end }}

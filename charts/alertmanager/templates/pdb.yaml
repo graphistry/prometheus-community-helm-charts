@@ -5,9 +5,10 @@ metadata:
   name: {{ include "alertmanager.fullname" . }}
   labels:
     {{- include "alertmanager.labels" . | nindent 4 }}
+  namespace: {{ include "alertmanager.namespace" . }}
 spec:
   selector:
     matchLabels:
       {{- include "alertmanager.selectorLabels" . | nindent 6 }}
-  {{- toYaml .Values.podDisruptionBudget | indent 2 }}
+  {{- toYaml .Values.podDisruptionBudget | nindent 2 }}
 {{- end }}

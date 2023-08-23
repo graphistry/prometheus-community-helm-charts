@@ -13,8 +13,9 @@ spec:
       {{- include "prometheus-json-exporter.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
@@ -30,10 +31,16 @@ spec:
       serviceAccountName: {{ include "prometheus-json-exporter.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.extraInitContainers }}
+      initContainers:
+        {{ toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- with .Values.environmentVariables }}
+          env:
+            {{- toYaml . | nindent 12}}
+          {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
@@ -57,6 +64,8 @@ spec:
           {{- with .Values.additionalVolumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end  }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
       volumes:
       - name: config-configmap-volume
         configMap:
